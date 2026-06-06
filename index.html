@@ -607,6 +607,7 @@ function PartnersTab({ showToast }) {
 // ─── Users ───────────────────────────────────────────────────
 function UsersTab({ showToast }) {
   const [rows, setRows]       = useState([]);
+  const [favMap, setFavMap]   = useState({});
   const [loading, setLoading] = useState(true);
   const [search, setSearch]   = useState('');
 
@@ -614,15 +615,23 @@ function UsersTab({ showToast }) {
 
   async function load() {
     setLoading(true);
-    const data = await db.get('favorites', 'select=user_id&order=user_id');
-    // Get unique users from favorites as proxy
-    const favData = await db.get('favorites', 'select=user_id');
-    const unique = [...new Set((Array.isArray(favData)?favData:[]).map(f=>f.user_id))];
-    setRows(unique.map((id,i)=>({ id, label: `Utilizador ${i+1}`, favorites: (Array.isArray(favData)?favData:[]).filter(f=>f.user_id===id).length })));
+    const [users, favs] = await Promise.all([
+      db.get('users', 'order=created_at.desc'),
+      db.get('favorites', 'select=user_id'),
+    ]);
+    setRows(Array.isArray(users) ? users : []);
+    const map = {};
+    (Array.isArray(favs) ? favs : []).forEach(f => {
+      map[f.user_id] = (map[f.user_id] || 0) + 1;
+    });
+    setFavMap(map);
     setLoading(false);
   }
 
-  const filtered = rows.filter(r => r.id?.toLowerCase().includes(search.toLowerCase()));
+  const filtered = rows.filter(r =>
+    r.email?.toLowerCase().includes(search.toLowerCase()) ||
+    r.display_name?.toLowerCase().includes(search.toLowerCase())
+  );
 
   return (
     <div className="table-card">
@@ -633,12 +642,14 @@ function UsersTab({ showToast }) {
       {loading ? <div className="loading"><div className="spinner"/><div>Carregando...</div></div> :
       filtered.length===0 ? <div className="empty"><div className="icon">👤</div><div>Nenhum utilizador encontrado.</div></div> :
       <table>
-        <thead><tr><th>ID</th><th>Favoritos</th></tr></thead>
+        <thead><tr><th>Nome</th><th>Email</th><th>Registado em</th><th>Favoritos</th></tr></thead>
         <tbody>
           {filtered.map(r=>(
             <tr key={r.id}>
-              <td style={{fontFamily:'monospace',fontSize:12,color:'var(--muted)'}}>{r.id}</td>
-              <td><span className="badge badge-green">❤️ {r.favorites}</span></td>
+              <td><strong>{r.display_name || '—'}</strong></td>
+              <td style={{color:'var(--muted)',fontSize:13}}>{r.email}</td>
+              <td style={{color:'var(--muted)',fontSize:13}}>{r.created_at ? new Date(r.created_at).toLocaleDateString('pt-BR') : '—'}</td>
+              <td>{favMap[r.id] ? <span className="badge badge-green">❤️ {favMap[r.id]}</span> : <span className="badge badge-gray">0</span>}</td>
             </tr>
           ))}
         </tbody>
