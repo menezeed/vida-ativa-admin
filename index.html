@@ -294,13 +294,18 @@ function ActivitiesTab({ showToast }) {
   async function save() {
     setSaving(true);
     try {
+      // Clean empty UUID fields to null
+      const cleanForm = {...form};
+      if (!cleanForm.venue_id) cleanForm.venue_id = null;
+      if (!cleanForm.start_date) cleanForm.start_date = null;
+      if (!cleanForm.end_date) cleanForm.end_date = null;
       if (modal === 'new') {
         const today = new Date().toISOString().slice(0, 10);
-        const body = { ...form, start_date: form.start_date || today };
+        const body = { ...cleanForm, start_date: cleanForm.start_date || today };
         await db.post('activities', body);
         showToast('Atividade criada!', 'success');
       } else {
-        await db.patch('activities', form.id, form);
+        await db.patch('activities', form.id, cleanForm);
         showToast('Atividade atualizada!', 'success');
       }
       setModal(null); load();
