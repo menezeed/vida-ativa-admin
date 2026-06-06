@@ -282,7 +282,7 @@ function ActivitiesTab({ showToast }) {
   }
 
   function openNew() {
-    setForm({ title:'', description:'', category:'', venue_id:null, schedule:'', price:0, is_free:false, is_sponsored:false, start_date:null, end_date:null });
+    setForm({ title:'', description:'', category:'', venue_id:null, schedule:'', price:0, is_free:false, is_sponsored:false, start_date:null, end_date:null, recurrence_type:'none', recurrence_days:[], recurrence_time:'' });
     setModal('new');
   }
 
@@ -344,12 +344,13 @@ function ActivitiesTab({ showToast }) {
         {loading ? <div className="loading"><div className="spinner"/><div>Carregando...</div></div> :
         filtered.length === 0 ? <div className="empty"><div className="icon">📅</div><div>Nenhuma atividade encontrada.</div></div> :
         <table>
-          <thead><tr><th>Título</th><th>Categoria</th><th>Horário</th><th>Preço</th><th>Status</th><th></th></tr></thead>
+          <thead><tr><th>Título</th><th>Categoria</th><th>Recorrência</th><th>Horário</th><th>Preço</th><th>Status</th><th></th></tr></thead>
           <tbody>
             {filtered.map(r => (
               <tr key={r.id}>
                 <td><strong>{r.title}</strong></td>
                 <td><span className="badge badge-gray">{r.category}</span></td>
+                <td>{r.recurrence_type && r.recurrence_type!=='none' ? <span className="badge badge-green">{r.recurrence_type==='daily'?'Diário':r.recurrence_type==='weekly'?'Semanal':'Mensal'}</span> : <span className="badge badge-gray">Único</span>}</td>
                 <td style={{color:'var(--muted)',fontSize:13}}>{r.schedule}</td>
                 <td>{r.is_free ? <span className="badge badge-green">Grátis</span> : `R$ ${r.price}`}</td>
                 <td>{r.is_sponsored ? <span className="badge badge-warn">Parceiro</span> : <span className="badge badge-gray">Normal</span>}</td>
@@ -410,6 +411,49 @@ function ActivitiesTab({ showToast }) {
               <label>URL da Imagem</label>
               <input value={form.imagem_url||''} onChange={e=>setForm({...form,imagem_url:e.target.value})} placeholder="https://..." />
             </div>
+            <div className="form-group form-full">
+              <label>Recorrência</label>
+              <select value={form.recurrence_type||'none'} onChange={e=>setForm({...form,recurrence_type:e.target.value,recurrence_days:[]})}>
+                <option value="none">Evento único</option>
+                <option value="daily">Diário</option>
+                <option value="weekly">Semanal</option>
+                <option value="monthly">Mensal</option>
+              </select>
+            </div>
+            {(form.recurrence_type==='weekly'||form.recurrence_type==='monthly') && (
+              <div className="form-group form-full">
+                <label>{form.recurrence_type==='weekly'?'Dias da semana':'Dias do mês'}</label>
+                {form.recurrence_type==='weekly' ? (
+                  <div style={{display:'flex',gap:8,flexWrap:'wrap',marginTop:4}}>
+                    {['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'].map((d,i)=>{
+                      const days = form.recurrence_days||[];
+                      const sel  = days.includes(i);
+                      return (
+                        <button key={i} type="button"
+                          style={{padding:'6px 14px',borderRadius:20,border:'1px solid',fontSize:13,fontWeight:600,cursor:'pointer',
+                            backgroundColor:sel?'#1B6B45':'transparent',
+                            borderColor:sel?'#1B6B45':'#D3D1C7',
+                            color:sel?'#fff':'#4A4A46'}}
+                          onClick={()=>{
+                            const days = form.recurrence_days||[];
+                            setForm({...form, recurrence_days: sel?days.filter(x=>x!==i):[...days,i].sort()});
+                          }}>{d}</button>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <input type="number" min="1" max="31" value={(form.recurrence_days||[])[0]||''}
+                    onChange={e=>setForm({...form,recurrence_days:[parseInt(e.target.value)]})}
+                    placeholder="Ex: 15 (todo dia 15 do mês)" />
+                )}
+              </div>
+            )}
+            {form.recurrence_type && form.recurrence_type!=='none' && (
+              <div className="form-group">
+                <label>Horário da Atividade</label>
+                <input type="time" value={form.recurrence_time||''} onChange={e=>setForm({...form,recurrence_time:e.target.value})} />
+              </div>
+            )}
             <div className="form-group" style={{justifyContent:'flex-end',flexDirection:'row',gap:16,alignItems:'center'}}>
               <label className="form-check">
                 <input type="checkbox" checked={form.is_free||false} onChange={e=>setForm({...form,is_free:e.target.checked})} /> Gratuita
@@ -494,6 +538,7 @@ function VenuesTab({ showToast }) {
                 <td><strong>{r.name}</strong></td>
                 <td style={{color:'var(--muted)',fontSize:13}}>{r.address}</td>
                 <td><span className="badge badge-gray">{r.category}</span></td>
+                <td>{r.recurrence_type && r.recurrence_type!=='none' ? <span className="badge badge-green">{r.recurrence_type==='daily'?'Diário':r.recurrence_type==='weekly'?'Semanal':'Mensal'}</span> : <span className="badge badge-gray">Único</span>}</td>
                 <td style={{color:'var(--muted)',fontSize:12}}>{r.lat?.toFixed(4)}, {r.lng?.toFixed(4)}</td>
                 <td>
                   <div style={{display:'flex',gap:6}}>
