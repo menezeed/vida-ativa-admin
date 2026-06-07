@@ -411,6 +411,10 @@ function ActivitiesTab({ showToast }) {
               <label>URL da Imagem</label>
               <input value={form.imagem_url||''} onChange={e=>setForm({...form,imagem_url:e.target.value})} placeholder="https://..." />
             </div>
+            <div className="form-group">
+              <label>Telefone (com código do país)</label>
+              <input value={form.phone||''} onChange={e=>setForm({...form,phone:e.target.value})} placeholder="+55 11 99999-9999" />
+            </div>
             <div className="form-group form-full">
               <label>Recorrência</label>
               <select value={form.recurrence_type||'none'} onChange={e=>setForm({...form,recurrence_type:e.target.value,recurrence_days:[]})}>
