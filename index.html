@@ -789,6 +789,43 @@ function App() {
   }, []);
   const [tab, setTab]         = useState('activities');
   const [toast, setToast]     = useState(null);
+  const [adminLabel, setAdminLabel]   = useState('');
+  const [adminRadius, setAdminRadius] = useState(10);
+  const [showLocModal, setShowLocModal] = useState(false);
+  const [locQuery, setLocQuery]       = useState('');
+  const [locResults, setLocResults]   = useState([]);
+  const [locSearching, setLocSearching] = useState(false);
+  const GOOGLE_API_KEY = 'AIzaSyD4dc8WP4rgEtVA-GX5VfYdZE4NbwHJX0g';
+
+  async function searchLocation(text) {
+    if (text.length < 3) { setLocResults([]); return; }
+    setLocSearching(true);
+    try {
+      const res = await fetch('https://places.googleapis.com/v1/places:autocomplete', {
+        method: 'POST',
+        headers: {'Content-Type':'application/json','X-Goog-Api-Key': GOOGLE_API_KEY},
+        body: JSON.stringify({input: text, languageCode: 'pt-BR'}),
+      });
+      const data = await res.json();
+      setLocResults(data.suggestions ?? []);
+    } catch { setLocResults([]); }
+    finally { setLocSearching(false); }
+  }
+
+  async function selectLocation(suggestion) {
+    try {
+      const placeId = suggestion.placePrediction?.placeId;
+      const res = await fetch(`https://places.googleapis.com/v1/places/${placeId}`, {
+        headers: {'X-Goog-Api-Key': GOOGLE_API_KEY, 'X-Goog-FieldMask': 'location,displayName'},
+      });
+      const data = await res.json();
+      const parts = (suggestion.placePrediction?.text?.text ?? '').split(',').map(p => p.trim());
+      setAdminLabel(parts.slice(0,2).join(', '));
+      setShowLocModal(false);
+      setLocQuery('');
+      setLocResults([]);
+    } catch(e) { console.error(e); }
+  }
 
   function showToast(msg, type='success') {
     setToast({msg, type});
