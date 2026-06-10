@@ -519,11 +519,18 @@ function VenuesTab({ showToast }) {
     try {
       const placeId = suggestion.placePrediction?.placeId;
       const res = await fetch(`https://places.googleapis.com/v1/places/${placeId}`, {
-        headers: {'X-Goog-Api-Key':'AIzaSyD4dc8WP4rgEtVA-GX5VfYdZE4NbwHJX0g','X-Goog-FieldMask':'location,formattedAddress'},
+        headers: {'X-Goog-Api-Key':'AIzaSyD4dc8WP4rgEtVA-GX5VfYdZE4NbwHJX0g','X-Goog-FieldMask':'location,formattedAddress,displayName'},
       });
       const data = await res.json();
       const fullText = suggestion.placePrediction?.text?.text ?? '';
-      setForm(f => ({...f, address: data.formattedAddress || fullText, lat: data.location?.latitude ?? '', lng: data.location?.longitude ?? ''}));
+      const name = data.displayName?.text || fullText.split(',')[0];
+      setForm(f => ({
+        ...f,
+        name: f.name || name,
+        address: data.formattedAddress || fullText,
+        lat: data.location?.latitude ?? '',
+        lng: data.location?.longitude ?? '',
+      }));
       setAddrQuery(data.formattedAddress || fullText);
       setAddrResults([]);
     } catch(e) { console.error(e); }
