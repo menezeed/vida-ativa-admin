@@ -377,6 +377,7 @@ function ActivitiesTab({ showToast }) {
               <label>Descrição</label>
               <textarea value={form.description||''} onChange={e=>setForm({...form,description:e.target.value})} placeholder="Descrição da atividade" />
             </div>
+            <div className="form-group form-full"><label>🔗 Link da atividade (opcional)</label><input value={form.url||''} onChange={e=>setForm({...form,url:e.target.value})} placeholder="https://www.sesc.com.br/atividade/..." /></div>
             <div className="form-group">
               <label>Categoria</label>
               <select value={form.category||''} onChange={e=>setForm({...form,category:e.target.value})}>
