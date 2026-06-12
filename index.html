@@ -322,7 +322,12 @@ function ActivitiesTab({ showToast }) {
   }
 
   const CATS = ['Teatro','Shows','Cursos','Esportes','Museu','Outro'];
-  const filtered = rows.filter(r => r.title?.toLowerCase().includes(search.toLowerCase()));
+  const filtered = rows.filter(r => {
+            const matchText = !search || r.title?.toLowerCase().includes(search.toLowerCase());
+            const matchCat  = !filterCat || r.category === filterCat;
+            const matchVen  = !filterVenue || String(r.venue_id) === String(filterVenue);
+            return matchText && matchCat && matchVen;
+          });
 
   return (
     <>
@@ -335,9 +340,26 @@ function ActivitiesTab({ showToast }) {
 
       <div className="table-card">
         <div className="table-header">
-          <div className="search-box">
-            <span>🔍</span>
-            <input placeholder="Pesquisar atividade..." value={search} onChange={e=>setSearch(e.target.value)} />
+          <div style={{display:'flex',gap:8,flex:1,flexWrap:'wrap',alignItems:'center'}}>
+            <div className="search-box">
+              <span>🔍</span>
+              <input placeholder="Pesquisar atividade..." value={search} onChange={e=>setSearch(e.target.value)} />
+            </div>
+            <select style={{padding:'8px 12px',borderRadius:8,border:'1px solid var(--border)',fontSize:14,background:'var(--bg)',color:'var(--text)',cursor:'pointer'}}
+              value={filterCat} onChange={e=>setFilterCat(e.target.value)}>
+              <option value="">Todas as categorias</option>
+              {['Teatro','Shows','Esportes','Cursos','Museu','Dança','Saúde','Gastronomia'].map(cat=>(
+                <option key={cat} value={cat}>{cat}</option>
+              ))}
+            </select>
+            <select style={{padding:'8px 12px',borderRadius:8,border:'1px solid var(--border)',fontSize:14,background:'var(--bg)',color:'var(--text)',cursor:'pointer'}}
+              value={filterVenue} onChange={e=>setFilterVenue(e.target.value)}>
+              <option value="">Todos os locais</option>
+              {venues.map(v=>(<option key={v.id} value={v.id}>{v.name}</option>))}
+            </select>
+            {(search||filterCat||filterVenue) && (
+              <button onClick={()=>{setSearch('');setFilterCat('');setFilterVenue('');}} style={{padding:'8px 12px',borderRadius:8,border:'1px solid var(--border)',background:'var(--bg)',cursor:'pointer',fontSize:13,color:'var(--muted)'}}>✕ Limpar</button>
+            )}
           </div>
           <button className="btn btn-primary" onClick={openNew}>+ Nova Atividade</button>
         </div>
