@@ -836,7 +836,7 @@ function CategoriesTab({ showToast, categories, setCategories }) {
         showToast('Já existe uma categoria com essa chave.', 'error');
         return;
       }
-      setCategories([...cats, form]);
+      setCategories([...categories, form]);
       showToast('Categoria criada!', 'success');
     } else {
       setCategories(categories.map(c => c.key === modal.key ? form : c));
